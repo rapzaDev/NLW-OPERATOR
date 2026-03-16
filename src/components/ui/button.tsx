@@ -1,5 +1,4 @@
 import type { ButtonHTMLAttributes } from "react";
-import { twMerge } from "tailwind-merge";
 import { tv, type VariantProps } from "tailwind-variants";
 
 const buttonVariants = tv({
@@ -38,7 +37,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={twMerge(buttonVariants({ variant, size }), className)}
+      className={buttonVariants({ className, variant, size })}
       type={type}
       {...props}
     />
