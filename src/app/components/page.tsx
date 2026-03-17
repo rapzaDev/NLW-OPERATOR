@@ -5,6 +5,7 @@ import {
   buttonSizeOptions,
   buttonVariantOptions,
   CodeBlock,
+  CodeBlockHeader,
   CodeEditorBody,
   CodeEditorComment,
   CodeEditorHeader,
@@ -51,7 +52,8 @@ const componentCatalog = [
   },
   {
     name: "CodeBlock",
-    notes: "Bloco de código SSR com Shiki e tema vesper.",
+    notes:
+      "Bloco de código SSR com Shiki e header opcional composto fora dele.",
     variants: 1,
   },
   {
@@ -247,12 +249,10 @@ export default async function ComponentsPage() {
           title="code_block"
         >
           <div className="border border-stroke bg-panel p-6">
-            <CodeBlock
-              className="max-w-3xl"
-              code={codeSample}
-              filename="calculate.js"
-              lang="javascript"
-            />
+            <figure className="max-w-3xl overflow-hidden border border-stroke bg-surface">
+              <CodeBlockHeader filename="calculate.js" />
+              <CodeBlock code={codeSample} lang="javascript" />
+            </figure>
           </div>
         </ShowcaseSection>
 

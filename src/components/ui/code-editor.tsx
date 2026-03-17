@@ -458,7 +458,13 @@ export function CodeEditorBody({
   ...props
 }: CodeEditorBodyProps) {
   return (
-    <div className={joinClasses("flex", className)} {...props}>
+    <div
+      className={joinClasses(
+        "flex max-h-[32rem] overflow-x-hidden overflow-y-auto",
+        className,
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -638,7 +644,7 @@ export function CodeEditorInput({
       <textarea
         aria-describedby={commentId}
         className={joinClasses(
-          "relative z-10 min-h-[18rem] w-full resize-y overflow-x-auto overflow-y-hidden bg-transparent p-2.5 font-display text-[11px] leading-[1.55] outline-none placeholder:text-subtle sm:p-3 sm:text-[13px] sm:leading-[1.45]",
+          "relative z-10 min-h-[18rem] w-full resize-none overflow-x-auto overflow-y-hidden bg-transparent p-2.5 font-display text-[11px] leading-[1.55] outline-none placeholder:text-subtle sm:p-3 sm:text-[13px] sm:leading-[1.45]",
           currentValue && isHighlightReady
             ? "text-transparent"
             : "text-foreground",

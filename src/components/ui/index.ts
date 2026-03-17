@@ -5,8 +5,8 @@ export {
   buttonVariantOptions,
   buttonVariants,
 } from "./button";
-export type { CodeBlockProps } from "./code-block";
-export { CodeBlock } from "./code-block";
+export type { CodeBlockHeaderProps, CodeBlockProps } from "./code-block";
+export { CodeBlock, CodeBlockHeader } from "./code-block";
 export type { CodeEditorProps } from "./code-editor";
 export {
   CodeEditorBody,
