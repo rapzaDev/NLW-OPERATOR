@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+@theme {
+  --color-background: #0a0a0a;
+  --color-surface: #111111;
+  --color-surface-muted: #0f0f0f;
+  --color-surface-subtle: #161616;
+  --color-panel: rgb(0 0 0 / 0.4);
+  --color-panel-strong: rgb(0 0 0 / 0.6);
+  --color-surface-hover: rgb(255 255 255 / 0.03);
+  --color-stroke: #2a2a2a;
+  --color-foreground: #fafafa;
+  --color-foreground-soft: #a0a0a0;
+  --color-muted: #6b7280;
+  --color-subtle: #4b5563;
+  --color-accent-green: #10b981;
+  --color-accent-green-strong: #34d399;
+  --color-critical: #ef4444;
+  --color-warning: #f59e0b;
+  --color-code-accent: #ffc799;
+  --color-diff-added: #0a1a0f;
+  --color-diff-removed: #1a0a0a;
+  --font-display:
+    "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", "SF Mono", Consolas,
+    "Liberation Mono", Menlo, monospace;
+  --font-body:
+    "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", "SF Mono", Consolas,
+    "Liberation Mono", Menlo, monospace;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+    color-scheme: dark;
+    @apply bg-background;
+  }
+
+  body {
+    margin: 0;
+    @apply min-h-screen bg-background font-display text-foreground;
+  }
+}

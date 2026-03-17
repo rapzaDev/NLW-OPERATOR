@@ -10,6 +10,13 @@ Este arquivo define os padrões para criação de componentes em `src/components
 - Não use `twMerge` quando o componente já usa `tailwind-variants`.
 - Passe `className` direto para a função de variantes, por exemplo:
   `buttonVariants({ variant, size, className })`.
+- Prefira composição para pedaços internos do componente.
+  Exemplo: use `ComponentRoot`, `ComponentTitle`, `ComponentDescription`
+  em vez de props como `title`, `description`, `label`, `comment`, `prefix`
+  ou flags como `showDot`.
+- Mantenha props para comportamento e estilo de alto nível.
+  Exemplos válidos: `tone`, `kind`, `checked`, `defaultChecked`, `disabled`,
+  `value`, `defaultValue`, `onValueChange`.
 
 ## Estrutura recomendada
 
@@ -17,6 +24,8 @@ Este arquivo define os padrões para criação de componentes em `src/components
 2. Definir `export interface ComponentProps extends NativeProps, VariantProps<typeof componentVariants> {}`.
 3. Implementar o componente usando a função de variantes para montar a classe.
 4. Exportar componente, variantes e tipos via `index.ts`.
+5. Quando houver compound components, exportar `ComponentRoot`,
+   `ComponentTitle`, `ComponentDescription`, etc., como named exports.
 
 ## Exemplo de assinatura
 
