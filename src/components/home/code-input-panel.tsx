@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import {
@@ -16,6 +17,7 @@ import {
   ToggleThumb,
   ToggleTrack,
 } from "@/components/ui";
+import { demoRoastHref } from "@/lib/demo-roasts";
 
 const codeSample = `function calculateTotal(items) {
   var total = 0;
@@ -39,6 +41,7 @@ const codeCharacterFormatter = new Intl.NumberFormat("en-US");
 const stats = ["2,847 codes roasted", "avg score: 4.2/10"] as const;
 
 export function CodeInputPanel() {
+  const router = useRouter();
   const [codeValue, setCodeValue] = useState(codeSample);
   const codeCharacterCount = codeValue.length;
   const exceededCharacterCount = Math.max(
@@ -106,6 +109,9 @@ export function CodeInputPanel() {
         <Button
           className="w-full sm:w-auto"
           disabled={isCodeLimitExceeded}
+          onClick={() => {
+            router.push(demoRoastHref);
+          }}
           size="lg"
           variant="primary"
         >
