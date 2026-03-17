@@ -1,11 +1,13 @@
-import { LeaderboardPreview } from "@/components/home/leaderboard-preview";
+import type { Metadata } from "next";
+import { LeaderboardPageScreen } from "@/components/leaderboard/leaderboard-page";
 
-export default function LeaderboardPage() {
-  return (
-    <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-[960px] flex-col gap-8 px-4 pb-14 pt-10 sm:px-8 sm:pb-16 sm:pt-16 lg:px-10 lg:pt-20">
-        <LeaderboardPreview footerHref={null} headerActionHref={null} />
-      </div>
-    </main>
-  );
+export const metadata: Metadata = {
+  title: "Shame Leaderboard | devroast",
+  description: "Ranking estático com os snippets mais roasted do devroast.",
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function LeaderboardPage() {
+  return <LeaderboardPageScreen />;
 }
