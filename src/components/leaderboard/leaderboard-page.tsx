@@ -1,5 +1,5 @@
-import { cache } from "react";
-import { type BundledLanguage, codeToTokens } from "shiki";
+import type { BundledLanguage } from "shiki";
+import { CodeBlock } from "@/components/ui";
 
 type LeaderboardEntry = {
   code: string[];
@@ -7,10 +7,6 @@ type LeaderboardEntry = {
   rank: number;
   score: string;
   scoreLabel: string;
-};
-
-type HighlightedLeaderboardEntry = LeaderboardEntry & {
-  highlightedCode: Awaited<ReturnType<typeof codeToTokens>>;
 };
 
 const leaderboardEntries = [
@@ -63,19 +59,6 @@ const leaderboardEntries = [
   },
 ] as const satisfies ReadonlyArray<LeaderboardEntry>;
 
-const getHighlightedLeaderboardEntries = cache(
-  async (): Promise<HighlightedLeaderboardEntry[]> =>
-    Promise.all(
-      leaderboardEntries.map(async (entry) => ({
-        ...entry,
-        highlightedCode: await codeToTokens(entry.code.join("\n"), {
-          lang: entry.language,
-          theme: "vesper",
-        }),
-      })),
-    ),
-);
-
 function LeaderboardHero() {
   return (
     <header className="flex flex-col gap-4">
@@ -104,31 +87,9 @@ function LeaderboardHero() {
   );
 }
 
-function LeaderboardEntryCard({
-  entry,
-}: {
-  entry: HighlightedLeaderboardEntry;
-}) {
-  const highlightedLines = entry.highlightedCode.tokens.length
-    ? entry.highlightedCode.tokens
-    : [[]];
-  const defaultTokenColor =
-    entry.highlightedCode.fg ?? "var(--color-foreground-soft)";
-  let lineStartOffset = 0;
-  const highlightedLineEntries = highlightedLines.map((line) => {
-    const lineText = line.map((token) => token.content).join("");
-    const lineId = `${entry.rank}-${lineStartOffset}-${lineText}`;
-
-    lineStartOffset += lineText.length + 1;
-
-    return {
-      id: lineId,
-      tokens: line,
-    };
-  });
-
+function LeaderboardEntryCard({ entry }: { entry: LeaderboardEntry }) {
   return (
-    <article className="border border-stroke bg-background">
+    <article className="overflow-hidden border border-stroke bg-background">
       <div className="flex flex-col gap-3 border-b border-stroke px-4 py-3 sm:h-12 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-0">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <div className="flex items-center gap-1.5 font-display text-[13px] leading-none">
@@ -149,52 +110,19 @@ function LeaderboardEntryCard({
           <span className="text-subtle">{entry.code.length} lines</span>
         </div>
       </div>
-
-      <div className="flex min-w-0 border border-stroke bg-surface">
-        <ol
-          aria-hidden="true"
-          className="flex w-10 shrink-0 flex-col items-end gap-1.5 border-r border-stroke bg-surface-muted px-[10px] py-[14px] font-display text-xs leading-[1.5] text-subtle"
-        >
-          {highlightedLineEntries.map((lineEntry, index) => (
-            <li key={lineEntry.id}>{index + 1}</li>
-          ))}
-        </ol>
-
-        <pre className="min-w-0 flex-1 overflow-x-auto bg-surface px-4 py-[14px] font-display text-xs leading-[1.5] text-foreground-soft sm:px-4">
-          <code className="grid min-w-max gap-1.5 whitespace-pre">
-            {highlightedLineEntries.map((lineEntry) => (
-              <span className="block min-h-[1.125rem]" key={lineEntry.id}>
-                {lineEntry.tokens.length === 0 ? (
-                  <span>&nbsp;</span>
-                ) : (
-                  lineEntry.tokens.map((token) => (
-                    <span
-                      key={`${lineEntry.id}-${token.offset}-${token.content}`}
-                      style={{ color: token.color ?? defaultTokenColor }}
-                    >
-                      {token.content}
-                    </span>
-                  ))
-                )}
-              </span>
-            ))}
-          </code>
-        </pre>
-      </div>
+      <CodeBlock code={entry.code.join("\n")} lang={entry.language} />
     </article>
   );
 }
 
 export async function LeaderboardPageScreen() {
-  const highlightedEntries = await getHighlightedLeaderboardEntries();
-
   return (
     <main aria-labelledby="leaderboard-title" className="bg-background">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 px-4 pb-16 pt-10 sm:px-8 sm:pb-20 lg:px-20">
         <LeaderboardHero />
 
         <section className="flex flex-col gap-5">
-          {highlightedEntries.map((entry) => (
+          {leaderboardEntries.map((entry) => (
             <LeaderboardEntryCard entry={entry} key={entry.rank} />
           ))}
         </section>

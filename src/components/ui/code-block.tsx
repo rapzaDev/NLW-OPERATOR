@@ -1,21 +1,70 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { type BundledLanguage, codeToTokens } from "shiki";
 
-export interface CodeBlockProps
-  extends Omit<ComponentPropsWithoutRef<"figure">, "children"> {
-  code: string;
+function joinClasses(...values: Array<string | false | null | undefined>) {
+  return values.filter(Boolean).join(" ");
+}
+
+export interface CodeBlockHeaderProps
+  extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  children?: ReactNode;
   filename?: string;
+}
+
+export function CodeBlockHeader({
+  className,
+  children,
+  filename,
+  ...props
+}: CodeBlockHeaderProps) {
+  const trailingContent = children ?? filename;
+
+  return (
+    <div
+      className={joinClasses(
+        "flex h-10 items-center gap-2 border-b border-stroke px-3 sm:gap-3 sm:px-4",
+        className,
+      )}
+      {...props}
+    >
+      <span
+        aria-hidden="true"
+        className="size-2 rounded-full bg-critical sm:size-2.5"
+      />
+      <span
+        aria-hidden="true"
+        className="size-2 rounded-full bg-warning sm:size-2.5"
+      />
+      <span
+        aria-hidden="true"
+        className="size-2 rounded-full bg-accent-green sm:size-2.5"
+      />
+      {trailingContent ? (
+        <div className="ml-auto min-w-0">
+          {typeof trailingContent === "string" ? (
+            <span className="block truncate font-display text-[11px] text-subtle sm:text-[12px]">
+              {trailingContent}
+            </span>
+          ) : (
+            trailingContent
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export interface CodeBlockProps
+  extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  code: string;
   lang: BundledLanguage;
-  showFilename?: boolean;
   showLineNumbers?: boolean;
 }
 
 export async function CodeBlock({
   className,
   code,
-  filename,
   lang,
-  showFilename = true,
   showLineNumbers = true,
   ...props
 }: CodeBlockProps) {
@@ -34,32 +83,10 @@ export async function CodeBlock({
   }));
 
   return (
-    <figure
-      className={["overflow-hidden border border-stroke bg-surface", className]
-        .filter(Boolean)
-        .join(" ")}
+    <div
+      className={joinClasses("overflow-hidden bg-surface", className)}
       {...props}
     >
-      <figcaption className="flex h-10 items-center gap-2 border-b border-stroke px-3 sm:gap-3 sm:px-4">
-        <span
-          aria-hidden="true"
-          className="size-2 rounded-full bg-critical sm:size-2.5"
-        />
-        <span
-          aria-hidden="true"
-          className="size-2 rounded-full bg-warning sm:size-2.5"
-        />
-        <span
-          aria-hidden="true"
-          className="size-2 rounded-full bg-accent-green sm:size-2.5"
-        />
-        {showFilename ? (
-          <span className="ml-auto truncate font-display text-[11px] text-subtle sm:text-[12px]">
-            {filename ?? `snippet.${lang}`}
-          </span>
-        ) : null}
-      </figcaption>
-
       <div className="flex">
         {showLineNumbers ? (
           <ol
@@ -96,6 +123,6 @@ export async function CodeBlock({
           </code>
         </pre>
       </div>
-    </figure>
+    </div>
   );
 }

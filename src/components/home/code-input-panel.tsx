@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import {
   Button,
   CodeEditorBody,
@@ -30,14 +34,25 @@ const codeSample = `function calculateTotal(items) {
   return total;
 }`;
 
+const codeCharacterLimit = 2000;
+const codeCharacterFormatter = new Intl.NumberFormat("en-US");
 const stats = ["2,847 codes roasted", "avg score: 4.2/10"] as const;
 
 export function CodeInputPanel() {
+  const [codeValue, setCodeValue] = useState(codeSample);
+  const codeCharacterCount = codeValue.length;
+  const exceededCharacterCount = Math.max(
+    codeCharacterCount - codeCharacterLimit,
+    0,
+  );
+  const isCodeLimitExceeded = codeCharacterCount > codeCharacterLimit;
+
   return (
     <section className="mx-auto flex w-full max-w-[780px] flex-col gap-6 sm:gap-8">
       <CodeEditorRoot
         className="shadow-[0_0_0_1px_rgba(255,255,255,0.02)]"
-        defaultValue={codeSample}
+        onValueChange={setCodeValue}
+        value={codeValue}
       >
         <CodeEditorHeader>
           <CodeEditorLanguageSelect />
@@ -49,8 +64,28 @@ export function CodeInputPanel() {
         </CodeEditorComment>
         <CodeEditorBody>
           <CodeEditorLineNumbers />
-          <CodeEditorInput placeholder="// start typing your code here" />
+          <CodeEditorInput
+            aria-invalid={isCodeLimitExceeded}
+            placeholder="// start typing your code here"
+          />
         </CodeEditorBody>
+        <div
+          aria-live="polite"
+          className="flex items-center justify-end gap-3 border-t border-stroke px-3 py-2 font-body text-[11px] leading-5 sm:px-4"
+          role="status"
+        >
+          {isCodeLimitExceeded ? (
+            <span className="text-critical">
+              trim {codeCharacterFormatter.format(exceededCharacterCount)} chars
+            </span>
+          ) : null}
+          <span
+            className={isCodeLimitExceeded ? "text-critical" : "text-subtle"}
+          >
+            {codeCharacterFormatter.format(codeCharacterCount)} /{" "}
+            {codeCharacterFormatter.format(codeCharacterLimit)} chars
+          </span>
+        </div>
       </CodeEditorRoot>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
@@ -68,7 +103,12 @@ export function CodeInputPanel() {
           </p>
         </div>
 
-        <Button className="w-full sm:w-auto" size="lg" variant="primary">
+        <Button
+          className="w-full sm:w-auto"
+          disabled={isCodeLimitExceeded}
+          size="lg"
+          variant="primary"
+        >
           $ roast_my_code
         </Button>
       </div>
