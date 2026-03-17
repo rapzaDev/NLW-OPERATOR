@@ -38,7 +38,6 @@ const codeSample = `function calculateTotal(items) {
 
 const codeCharacterLimit = 2000;
 const codeCharacterFormatter = new Intl.NumberFormat("en-US");
-const stats = ["2,847 codes roasted", "avg score: 4.2/10"] as const;
 
 export function CodeInputPanel() {
   const router = useRouter();
@@ -117,17 +116,6 @@ export function CodeInputPanel() {
         >
           $ roast_my_code
         </Button>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 font-body text-center text-xs leading-5 text-subtle">
-        {stats.map((stat, index) => (
-          <div className="flex items-center gap-4" key={stat}>
-            {index > 0 ? (
-              <span className="font-display text-muted">·</span>
-            ) : null}
-            <span>{stat}</span>
-          </div>
-        ))}
       </div>
     </section>
   );
