@@ -1,23 +1,33 @@
 import type { ButtonHTMLAttributes } from "react";
 import { tv, type VariantProps } from "tailwind-variants";
 
+export const buttonVariantOptions = ["primary", "secondary", "link"] as const;
+
+export const buttonSizeOptions = ["sm", "md", "lg"] as const;
+
 const buttonVariants = tv({
-  base: "inline-flex items-center justify-center gap-2 px-6 py-2.5 font-mono text-[13px] font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-none",
+  base: "inline-flex items-center justify-center gap-2 border font-display leading-none tracking-tight transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-green focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 rounded-none",
   variants: {
     variant: {
-      primary: "bg-emerald-400 text-zinc-950 hover:bg-emerald-300",
-      secondary: "bg-zinc-800 text-zinc-100 hover:bg-zinc-700",
-      ghost: "bg-transparent text-zinc-100 hover:bg-zinc-900",
-      outline:
-        "border border-zinc-700 bg-transparent text-zinc-100 hover:bg-zinc-900",
+      primary:
+        "border-accent-green bg-accent-green text-background enabled:hover:border-accent-green-strong enabled:hover:bg-accent-green-strong",
+      secondary:
+        "border-stroke bg-transparent text-foreground enabled:hover:border-subtle enabled:hover:bg-surface-hover",
+      link: "border-transparent bg-transparent text-muted enabled:hover:text-foreground",
     },
     size: {
-      sm: "px-4 py-2 text-xs",
-      md: "",
-      lg: "px-8 py-3 text-sm",
-      icon: "size-10 p-0",
+      sm: "px-3 py-2 text-[11px]",
+      md: "px-4 py-2 text-[12px]",
+      lg: "px-6 py-2.5 text-[13px]",
     },
   },
+  compoundVariants: [
+    {
+      className: "px-0 py-0",
+      size: ["sm", "md", "lg"],
+      variant: "link",
+    },
+  ],
   defaultVariants: {
     variant: "primary",
     size: "md",

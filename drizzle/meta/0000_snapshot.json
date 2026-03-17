@@ -1,0 +1,564 @@
+{
+  "id": "5c205fe6-f86c-4543-8f9f-2e0df8cedf14",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.submissions": {
+      "name": "submissions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_code": {
+          "name": "source_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "language": {
+          "name": "language",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "language_source": {
+          "name": "language_source",
+          "type": "language_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unknown'"
+        },
+        "line_count": {
+          "name": "line_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "analysis_mode": {
+          "name": "analysis_mode",
+          "type": "analysis_mode",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "submission_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "submissions_status_idx": {
+          "name": "submissions_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "submissions_public_id_unique": {
+          "name": "submissions_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "submissions_source_code_not_empty_check": {
+          "name": "submissions_source_code_not_empty_check",
+          "value": "char_length(btrim(\"submissions\".\"source_code\")) > 0"
+        },
+        "submissions_line_count_positive_check": {
+          "name": "submissions_line_count_positive_check",
+          "value": "\"submissions\".\"line_count\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.submission_analyses": {
+      "name": "submission_analyses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "submission_id": {
+          "name": "submission_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "analysis_version": {
+          "name": "analysis_version",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score_tenths": {
+          "name": "score_tenths",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verdict_label": {
+          "name": "verdict_label",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verdict_tone": {
+          "name": "verdict_tone",
+          "type": "feedback_tone",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "headline": {
+          "name": "headline",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "submission_analyses_score_tenths_idx": {
+          "name": "submission_analyses_score_tenths_idx",
+          "columns": [
+            {
+              "expression": "score_tenths",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "submission_analyses_submission_id_submissions_id_fk": {
+          "name": "submission_analyses_submission_id_submissions_id_fk",
+          "tableFrom": "submission_analyses",
+          "tableTo": "submissions",
+          "columnsFrom": [
+            "submission_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "submission_analyses_submission_id_unique": {
+          "name": "submission_analyses_submission_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "submission_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "submission_analyses_score_tenths_range_check": {
+          "name": "submission_analyses_score_tenths_range_check",
+          "value": "\"submission_analyses\".\"score_tenths\" >= 0 and \"submission_analyses\".\"score_tenths\" <= 100"
+        },
+        "submission_analyses_verdict_label_not_empty_check": {
+          "name": "submission_analyses_verdict_label_not_empty_check",
+          "value": "char_length(btrim(\"submission_analyses\".\"verdict_label\")) > 0"
+        },
+        "submission_analyses_headline_not_empty_check": {
+          "name": "submission_analyses_headline_not_empty_check",
+          "value": "char_length(btrim(\"submission_analyses\".\"headline\")) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.submission_analysis_items": {
+      "name": "submission_analysis_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "analysis_id": {
+          "name": "analysis_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tone": {
+          "name": "tone",
+          "type": "feedback_tone",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "submission_analysis_items_analysis_id_submission_analyses_id_fk": {
+          "name": "submission_analysis_items_analysis_id_submission_analyses_id_fk",
+          "tableFrom": "submission_analysis_items",
+          "tableTo": "submission_analyses",
+          "columnsFrom": [
+            "analysis_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "submission_analysis_items_analysis_id_position_unique": {
+          "name": "submission_analysis_items_analysis_id_position_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "analysis_id",
+            "position"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "submission_analysis_items_position_non_negative_check": {
+          "name": "submission_analysis_items_position_non_negative_check",
+          "value": "\"submission_analysis_items\".\"position\" >= 0"
+        },
+        "submission_analysis_items_title_not_empty_check": {
+          "name": "submission_analysis_items_title_not_empty_check",
+          "value": "char_length(btrim(\"submission_analysis_items\".\"title\")) > 0"
+        },
+        "submission_analysis_items_description_not_empty_check": {
+          "name": "submission_analysis_items_description_not_empty_check",
+          "value": "char_length(btrim(\"submission_analysis_items\".\"description\")) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.submission_diff_blocks": {
+      "name": "submission_diff_blocks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "analysis_id": {
+          "name": "analysis_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_label": {
+          "name": "source_label",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_label": {
+          "name": "target_label",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "submission_diff_blocks_analysis_id_submission_analyses_id_fk": {
+          "name": "submission_diff_blocks_analysis_id_submission_analyses_id_fk",
+          "tableFrom": "submission_diff_blocks",
+          "tableTo": "submission_analyses",
+          "columnsFrom": [
+            "analysis_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "submission_diff_blocks_analysis_id_position_unique": {
+          "name": "submission_diff_blocks_analysis_id_position_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "analysis_id",
+            "position"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "submission_diff_blocks_position_non_negative_check": {
+          "name": "submission_diff_blocks_position_non_negative_check",
+          "value": "\"submission_diff_blocks\".\"position\" >= 0"
+        },
+        "submission_diff_blocks_source_label_not_empty_check": {
+          "name": "submission_diff_blocks_source_label_not_empty_check",
+          "value": "char_length(btrim(\"submission_diff_blocks\".\"source_label\")) > 0"
+        },
+        "submission_diff_blocks_target_label_not_empty_check": {
+          "name": "submission_diff_blocks_target_label_not_empty_check",
+          "value": "char_length(btrim(\"submission_diff_blocks\".\"target_label\")) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.submission_diff_lines": {
+      "name": "submission_diff_lines",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "diff_block_id": {
+          "name": "diff_block_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "diff_line_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "submission_diff_lines_diff_block_id_submission_diff_blocks_id_fk": {
+          "name": "submission_diff_lines_diff_block_id_submission_diff_blocks_id_fk",
+          "tableFrom": "submission_diff_lines",
+          "tableTo": "submission_diff_blocks",
+          "columnsFrom": [
+            "diff_block_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "submission_diff_lines_diff_block_id_position_unique": {
+          "name": "submission_diff_lines_diff_block_id_position_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "diff_block_id",
+            "position"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "submission_diff_lines_position_non_negative_check": {
+          "name": "submission_diff_lines_position_non_negative_check",
+          "value": "\"submission_diff_lines\".\"position\" >= 0"
+        },
+        "submission_diff_lines_content_not_empty_check": {
+          "name": "submission_diff_lines_content_not_empty_check",
+          "value": "char_length(\"submission_diff_lines\".\"content\") > 0"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.analysis_mode": {
+      "name": "analysis_mode",
+      "schema": "public",
+      "values": [
+        "honest",
+        "roast"
+      ]
+    },
+    "public.diff_line_kind": {
+      "name": "diff_line_kind",
+      "schema": "public",
+      "values": [
+        "context",
+        "removed",
+        "added"
+      ]
+    },
+    "public.feedback_tone": {
+      "name": "feedback_tone",
+      "schema": "public",
+      "values": [
+        "critical",
+        "warning",
+        "good"
+      ]
+    },
+    "public.language_source": {
+      "name": "language_source",
+      "schema": "public",
+      "values": [
+        "manual",
+        "detected",
+        "unknown"
+      ]
+    },
+    "public.submission_status": {
+      "name": "submission_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "processing",
+        "completed",
+        "failed"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
