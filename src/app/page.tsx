@@ -1,4 +1,9 @@
+import { Suspense } from "react";
 import { CodeInputPanel } from "@/components/home/code-input-panel";
+import {
+  HomepageStats,
+  HomepageStatsSkeleton,
+} from "@/components/home/homepage-stats";
 import { LeaderboardPreview } from "@/components/home/leaderboard-preview";
 
 export default async function Home() {
@@ -18,6 +23,10 @@ export default async function Home() {
         </section>
 
         <CodeInputPanel />
+
+        <Suspense fallback={<HomepageStatsSkeleton />}>
+          <HomepageStats />
+        </Suspense>
 
         <div className="h-8" />
 
