@@ -25,6 +25,8 @@ export {
   diffLineKindOptions,
   diffLineVariants,
 } from "./diff-line";
+export type { LoadingDotsProps } from "./loading-dots";
+export { LoadingDots } from "./loading-dots";
 export type { StatusBadgeProps } from "./status-badge";
 export {
   StatusBadgeDot,

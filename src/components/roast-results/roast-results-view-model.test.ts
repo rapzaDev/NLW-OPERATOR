@@ -28,6 +28,7 @@ test("createRoastResultsViewModel formats roast data for the result screen", () 
   });
 
   assert.equal(viewModel.scoreLabel, "3.6");
+  assert.equal(viewModel.scoreRingDegrees, 129.6);
   assert.equal(viewModel.verdictTone, "critical");
   assert.equal(viewModel.lineCountLabel, "2 lines");
   assert.equal(viewModel.highlightLanguage, "javascript");
@@ -64,5 +65,6 @@ test("createRoastResultsViewModel falls back to javascript for unsupported langu
 
   assert.equal(viewModel.highlightLanguage, "javascript");
   assert.equal(viewModel.lineCountLabel, "1 line");
+  assert.equal(viewModel.scoreRingDegrees, 230.4);
   assert.equal(viewModel.verdictTone, "warning");
 });

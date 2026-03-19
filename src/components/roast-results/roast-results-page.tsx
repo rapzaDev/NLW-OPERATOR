@@ -20,16 +20,29 @@ const scoreTextClassName = {
   warning: "text-warning",
 } as const;
 
+const scoreRingColorByTone = {
+  critical: "var(--color-critical)",
+  success: "var(--color-accent-green)",
+  warning: "var(--color-warning)",
+} as const;
+
 function ScoreRing({
+  scoreRingDegrees,
   scoreLabel,
   tone,
 }: {
+  scoreRingDegrees: number;
   scoreLabel: string;
   tone: keyof typeof scoreTextClassName;
 }) {
   return (
     <div className="relative size-[180px] shrink-0">
-      <div className="absolute inset-0 rounded-full bg-[conic-gradient(#ef4444_0deg,#f59e0b_126deg,#10b981_126deg,#10b981_360deg)]" />
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `conic-gradient(${scoreRingColorByTone[tone]} 0deg ${scoreRingDegrees}deg, var(--color-stroke) ${scoreRingDegrees}deg 360deg)`,
+        }}
+      />
       <div className="absolute inset-[4px] rounded-full bg-background" />
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
@@ -129,6 +142,7 @@ export async function RoastResultsPageScreen({
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 px-4 pb-16 pt-10 sm:px-8 sm:pb-20 lg:px-20">
         <section className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12">
           <ScoreRing
+            scoreRingDegrees={viewModel.scoreRingDegrees}
             scoreLabel={viewModel.scoreLabel}
             tone={viewModel.verdictTone}
           />

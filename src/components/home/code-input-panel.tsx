@@ -13,16 +13,17 @@ import {
   CodeEditorLanguageSelect,
   CodeEditorLineNumbers,
   CodeEditorRoot,
+  LoadingDots,
   ToggleLabel,
   ToggleRoot,
   ToggleThumb,
   ToggleTrack,
 } from "@/components/ui";
-import type {
-  CodeEditorLanguage,
-  CodeEditorLanguageMode,
+import {
+  type CodeEditorLanguage,
+  type CodeEditorLanguageMode,
+  resolveRoastSubmitLanguage,
 } from "@/lib/code-languages";
-import { DEFAULT_ROAST_LANGUAGE } from "@/lib/roast";
 import { useTRPC } from "@/trpc/client";
 
 const codeSample = `function calculateTotal(items) {
@@ -44,6 +45,7 @@ const codeSample = `function calculateTotal(items) {
 
 const codeCharacterLimit = 2000;
 const codeCharacterFormatter = new Intl.NumberFormat("en-US");
+const roastSubmitLabel = "$ roast_my_code";
 
 export function CodeInputPanel() {
   const router = useRouter();
@@ -52,7 +54,8 @@ export function CodeInputPanel() {
   const [languageMode, setLanguageMode] =
     useState<CodeEditorLanguageMode>("auto");
   const [resolvedLanguage, setResolvedLanguage] =
-    useState<CodeEditorLanguage | null>("javascript");
+    useState<CodeEditorLanguage | null>(null);
+  const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
   const [roastMode, setRoastMode] = useState(true);
   const codeCharacterCount = codeValue.length;
   const exceededCharacterCount = Math.max(
@@ -61,10 +64,6 @@ export function CodeInputPanel() {
   );
   const isCodeLimitExceeded = codeCharacterCount > codeCharacterLimit;
   const normalizedCodeValue = codeValue.trim();
-  const resolvedSubmitLanguage =
-    languageMode === "auto"
-      ? (resolvedLanguage ?? DEFAULT_ROAST_LANGUAGE)
-      : languageMode;
   const createRoastMutation = useMutation(
     trpc.roast.create.mutationOptions({
       onSuccess: ({ id }) => {
@@ -72,10 +71,9 @@ export function CodeInputPanel() {
       },
     }),
   );
+  const isSubmitPending = isPreparingSubmit || createRoastMutation.isPending;
   const isSubmitDisabled =
-    isCodeLimitExceeded ||
-    !normalizedCodeValue ||
-    createRoastMutation.isPending;
+    isCodeLimitExceeded || !normalizedCodeValue || isSubmitPending;
 
   return (
     <section className="mx-auto flex w-full max-w-[780px] flex-col gap-6 sm:gap-8">
@@ -136,23 +134,42 @@ export function CodeInputPanel() {
         </div>
 
         <Button
+          aria-busy={isSubmitPending}
           className="w-full sm:w-auto"
           disabled={isSubmitDisabled}
-          onClick={() => {
+          onClick={async () => {
             if (isSubmitDisabled) {
               return;
             }
 
-            createRoastMutation.mutate({
-              code: normalizedCodeValue,
-              language: resolvedSubmitLanguage,
-              roastMode,
-            });
+            setIsPreparingSubmit(true);
+
+            try {
+              const language = await resolveRoastSubmitLanguage({
+                code: normalizedCodeValue,
+                languageMode,
+                resolvedLanguage,
+              });
+
+              await createRoastMutation.mutateAsync({
+                code: normalizedCodeValue,
+                language,
+                roastMode,
+              });
+            } finally {
+              setIsPreparingSubmit(false);
+            }
           }}
           size="lg"
           variant="primary"
         >
-          {createRoastMutation.isPending ? "$ roasting..." : "$ roast_my_code"}
+          <span>{roastSubmitLabel}</span>
+          {isSubmitPending ? (
+            <>
+              <LoadingDots className="text-background/80" />
+              <span className="sr-only">Analyzing your code</span>
+            </>
+          ) : null}
         </Button>
       </div>
 

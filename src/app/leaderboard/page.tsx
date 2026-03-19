@@ -3,7 +3,7 @@ import { LeaderboardPageScreen } from "@/components/leaderboard/leaderboard-page
 
 export const metadata: Metadata = {
   title: "Shame Leaderboard | devroast",
-  description: "Ranking estático com os snippets mais roasted do devroast.",
+  description: "Ranking dinâmico com os roasts reais persistidos no devroast.",
 };
 
 export const dynamic = "force-dynamic";
