@@ -6,6 +6,8 @@ export default defineConfig({
   dialect: "postgresql",
   schema: [
     "./src/db/schema/enums.ts",
+    "./src/db/schema/roasts.ts",
+    "./src/db/schema/analysis-items.ts",
     "./src/db/schema/submissions.ts",
     "./src/db/schema/submission-analyses.ts",
     "./src/db/schema/submission-analysis-items.ts",

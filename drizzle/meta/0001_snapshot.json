@@ -1,9 +1,213 @@
 {
-  "id": "5c205fe6-f86c-4543-8f9f-2e0df8cedf14",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "b05bcb78-dd04-4a52-90a2-326c79e5f2cf",
+  "prevId": "5c205fe6-f86c-4543-8f9f-2e0df8cedf14",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.roasts": {
+      "name": "roasts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "language": {
+          "name": "language",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "line_count": {
+          "name": "line_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "roast_mode": {
+          "name": "roast_mode",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verdict": {
+          "name": "verdict",
+          "type": "roast_verdict",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "roast_quote": {
+          "name": "roast_quote",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "suggested_fix": {
+          "name": "suggested_fix",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "roasts_score_idx": {
+          "name": "roasts_score_idx",
+          "columns": [
+            {
+              "expression": "score",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "roasts_code_not_empty_check": {
+          "name": "roasts_code_not_empty_check",
+          "value": "char_length(btrim(\"roasts\".\"code\")) > 0"
+        },
+        "roasts_language_not_empty_check": {
+          "name": "roasts_language_not_empty_check",
+          "value": "char_length(btrim(\"roasts\".\"language\")) > 0"
+        },
+        "roasts_line_count_positive_check": {
+          "name": "roasts_line_count_positive_check",
+          "value": "\"roasts\".\"line_count\" > 0"
+        },
+        "roasts_score_range_check": {
+          "name": "roasts_score_range_check",
+          "value": "\"roasts\".\"score\" >= 0 and \"roasts\".\"score\" <= 10"
+        },
+        "roasts_roast_quote_not_empty_check": {
+          "name": "roasts_roast_quote_not_empty_check",
+          "value": "char_length(btrim(\"roasts\".\"roast_quote\")) > 0"
+        },
+        "roasts_suggested_fix_not_empty_check": {
+          "name": "roasts_suggested_fix_not_empty_check",
+          "value": "char_length(btrim(\"roasts\".\"suggested_fix\")) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.analysis_items": {
+      "name": "analysis_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "roast_id": {
+          "name": "roast_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "severity": {
+          "name": "severity",
+          "type": "analysis_severity",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "analysis_items_roast_id_roasts_id_fk": {
+          "name": "analysis_items_roast_id_roasts_id_fk",
+          "tableFrom": "analysis_items",
+          "tableTo": "roasts",
+          "columnsFrom": ["roast_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "analysis_items_roast_id_order_unique": {
+          "name": "analysis_items_roast_id_order_unique",
+          "nullsNotDistinct": false,
+          "columns": ["roast_id", "order"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "analysis_items_order_non_negative_check": {
+          "name": "analysis_items_order_non_negative_check",
+          "value": "\"analysis_items\".\"order\" >= 0"
+        },
+        "analysis_items_title_not_empty_check": {
+          "name": "analysis_items_title_not_empty_check",
+          "value": "char_length(btrim(\"analysis_items\".\"title\")) > 0"
+        },
+        "analysis_items_description_not_empty_check": {
+          "name": "analysis_items_description_not_empty_check",
+          "value": "char_length(btrim(\"analysis_items\".\"description\")) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.submissions": {
       "name": "submissions",
       "schema": "",
@@ -481,6 +685,11 @@
       "schema": "public",
       "values": ["honest", "roast"]
     },
+    "public.analysis_severity": {
+      "name": "analysis_severity",
+      "schema": "public",
+      "values": ["critical", "warning", "good"]
+    },
     "public.diff_line_kind": {
       "name": "diff_line_kind",
       "schema": "public",
@@ -495,6 +704,17 @@
       "name": "language_source",
       "schema": "public",
       "values": ["manual", "detected", "unknown"]
+    },
+    "public.roast_verdict": {
+      "name": "roast_verdict",
+      "schema": "public",
+      "values": [
+        "needs_serious_help",
+        "rough_around_edges",
+        "decent_code",
+        "solid_work",
+        "exceptional"
+      ]
     },
     "public.submission_status": {
       "name": "submission_status",

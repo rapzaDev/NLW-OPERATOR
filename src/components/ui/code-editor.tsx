@@ -18,78 +18,17 @@ import {
   useRef,
   useState,
 } from "react";
-import type { BundledLanguage } from "shiki";
+import {
+  type CodeEditorLanguage,
+  type CodeEditorLanguageMode,
+  codeEditorLanguages,
+} from "@/lib/code-languages";
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
 }
 
 const codeEditorTheme = "vesper";
-export const codeEditorLanguages = [
-  { label: "Angular HTML", value: "angular-html" },
-  { label: "Angular TypeScript", value: "angular-ts" },
-  { label: "Astro", value: "astro" },
-  { label: "Blade", value: "blade" },
-  { label: "C", value: "c" },
-  { label: "CoffeeScript", value: "coffee" },
-  { label: "C++", value: "cpp" },
-  { label: "CSS", value: "css" },
-  { label: "CSV", value: "csv" },
-  { label: "GLSL", value: "glsl" },
-  { label: "GraphQL", value: "graphql" },
-  { label: "Ruby Haml", value: "haml" },
-  { label: "Handlebars", value: "handlebars" },
-  { label: "HTML", value: "html" },
-  { label: "HTML (Derivative)", value: "html-derivative" },
-  { label: "HTTP", value: "http" },
-  { label: "Hurl", value: "hurl" },
-  { label: "Imba", value: "imba" },
-  { label: "Java", value: "java" },
-  { label: "JavaScript", value: "javascript" },
-  { label: "Jinja", value: "jinja" },
-  { label: "Jison", value: "jison" },
-  { label: "JSON", value: "json" },
-  { label: "JSON5", value: "json5" },
-  { label: "JSON with Comments", value: "jsonc" },
-  { label: "JSON Lines", value: "jsonl" },
-  { label: "JSX", value: "jsx" },
-  { label: "Julia", value: "julia" },
-  { label: "Less", value: "less" },
-  { label: "Markdown", value: "markdown" },
-  { label: "Marko", value: "marko" },
-  { label: "MDC", value: "mdc" },
-  { label: "MDX", value: "mdx" },
-  { label: "PHP", value: "php" },
-  { label: "PostCSS", value: "postcss" },
-  { label: "Pug", value: "pug" },
-  { label: "Python", value: "python" },
-  { label: "R", value: "r" },
-  { label: "RegExp", value: "regexp" },
-  { label: "Sass", value: "sass" },
-  { label: "SCSS", value: "scss" },
-  { label: "Shell", value: "shellscript" },
-  { label: "SQL", value: "sql" },
-  { label: "Stylus", value: "stylus" },
-  { label: "Svelte", value: "svelte" },
-  { label: "TypeScript with Tags", value: "ts-tags" },
-  { label: "TSX", value: "tsx" },
-  { label: "TypeScript", value: "typescript" },
-  { label: "Vue", value: "vue" },
-  { label: "Vue HTML", value: "vue-html" },
-  { label: "Vue Vine", value: "vue-vine" },
-  { label: "WebAssembly", value: "wasm" },
-  { label: "WGSL", value: "wgsl" },
-  { label: "WebAssembly Interface Types", value: "wit" },
-  { label: "XML", value: "xml" },
-  { label: "YAML", value: "yaml" },
-] as const satisfies ReadonlyArray<{
-  label: string;
-  value: BundledLanguage;
-}>;
-
-export type CodeEditorLanguage = (typeof codeEditorLanguages)[number]["value"];
-export type CodeEditorLanguageMode = CodeEditorLanguage | "auto";
-
 const codeEditorLanguageValues = codeEditorLanguages.map(
   ({ value }) => value,
 ) as CodeEditorLanguage[];
@@ -235,6 +174,7 @@ export interface CodeEditorRootProps
   language?: CodeEditorLanguageMode;
   minLines?: number;
   onLanguageChange?: (language: CodeEditorLanguageMode) => void;
+  onResolvedLanguageChange?: (language: CodeEditorLanguage | null) => void;
   onValueChange?: (value: string) => void;
   value?: string;
 }
@@ -247,6 +187,7 @@ export function CodeEditorRoot({
   language,
   minLines = 14,
   onLanguageChange,
+  onResolvedLanguageChange,
   onValueChange,
   value,
   ...props
@@ -309,6 +250,10 @@ export function CodeEditorRoot({
       isCancelled = true;
     };
   }, [currentLanguageMode, deferredValue]);
+
+  useEffect(() => {
+    onResolvedLanguageChange?.(resolvedLanguage);
+  }, [onResolvedLanguageChange, resolvedLanguage]);
 
   return (
     <CodeEditorContext.Provider
