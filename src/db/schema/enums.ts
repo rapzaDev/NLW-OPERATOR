@@ -27,8 +27,24 @@ export const diffLineKindEnum = pgEnum("diff_line_kind", [
   "added",
 ]);
 
+export const roastVerdictEnum = pgEnum("roast_verdict", [
+  "needs_serious_help",
+  "rough_around_edges",
+  "decent_code",
+  "solid_work",
+  "exceptional",
+]);
+
+export const analysisSeverityEnum = pgEnum("analysis_severity", [
+  "critical",
+  "warning",
+  "good",
+]);
+
 export type SubmissionStatus = (typeof submissionStatusEnum.enumValues)[number];
 export type AnalysisMode = (typeof analysisModeEnum.enumValues)[number];
 export type LanguageSource = (typeof languageSourceEnum.enumValues)[number];
 export type FeedbackTone = (typeof feedbackToneEnum.enumValues)[number];
 export type DiffLineKind = (typeof diffLineKindEnum.enumValues)[number];
+export type RoastVerdict = (typeof roastVerdictEnum.enumValues)[number];
+export type AnalysisSeverity = (typeof analysisSeverityEnum.enumValues)[number];

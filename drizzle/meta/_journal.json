@@ -8,6 +8,13 @@
       "when": 1773740565215,
       "tag": "0000_milky_shaman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773871069616,
+      "tag": "0001_brief_typhoid_mary",
+      "breakpoints": true
     }
   ]
 }

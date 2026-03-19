@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -17,7 +18,12 @@ import {
   ToggleThumb,
   ToggleTrack,
 } from "@/components/ui";
-import { demoRoastHref } from "@/lib/demo-roasts";
+import type {
+  CodeEditorLanguage,
+  CodeEditorLanguageMode,
+} from "@/lib/code-languages";
+import { DEFAULT_ROAST_LANGUAGE } from "@/lib/roast";
+import { useTRPC } from "@/trpc/client";
 
 const codeSample = `function calculateTotal(items) {
   var total = 0;
@@ -41,18 +47,42 @@ const codeCharacterFormatter = new Intl.NumberFormat("en-US");
 
 export function CodeInputPanel() {
   const router = useRouter();
+  const trpc = useTRPC();
   const [codeValue, setCodeValue] = useState(codeSample);
+  const [languageMode, setLanguageMode] =
+    useState<CodeEditorLanguageMode>("auto");
+  const [resolvedLanguage, setResolvedLanguage] =
+    useState<CodeEditorLanguage | null>("javascript");
+  const [roastMode, setRoastMode] = useState(true);
   const codeCharacterCount = codeValue.length;
   const exceededCharacterCount = Math.max(
     codeCharacterCount - codeCharacterLimit,
     0,
   );
   const isCodeLimitExceeded = codeCharacterCount > codeCharacterLimit;
+  const normalizedCodeValue = codeValue.trim();
+  const resolvedSubmitLanguage =
+    languageMode === "auto"
+      ? (resolvedLanguage ?? DEFAULT_ROAST_LANGUAGE)
+      : languageMode;
+  const createRoastMutation = useMutation(
+    trpc.roast.create.mutationOptions({
+      onSuccess: ({ id }) => {
+        router.push(`/roast/${id}`);
+      },
+    }),
+  );
+  const isSubmitDisabled =
+    isCodeLimitExceeded ||
+    !normalizedCodeValue ||
+    createRoastMutation.isPending;
 
   return (
     <section className="mx-auto flex w-full max-w-[780px] flex-col gap-6 sm:gap-8">
       <CodeEditorRoot
         className="shadow-[0_0_0_1px_rgba(255,255,255,0.02)]"
+        onLanguageChange={setLanguageMode}
+        onResolvedLanguageChange={setResolvedLanguage}
         onValueChange={setCodeValue}
         value={codeValue}
       >
@@ -92,7 +122,7 @@ export function CodeInputPanel() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <ToggleRoot defaultChecked>
+          <ToggleRoot checked={roastMode} onCheckedChange={setRoastMode}>
             <ToggleTrack>
               <ToggleThumb />
             </ToggleTrack>
@@ -107,16 +137,30 @@ export function CodeInputPanel() {
 
         <Button
           className="w-full sm:w-auto"
-          disabled={isCodeLimitExceeded}
+          disabled={isSubmitDisabled}
           onClick={() => {
-            router.push(demoRoastHref);
+            if (isSubmitDisabled) {
+              return;
+            }
+
+            createRoastMutation.mutate({
+              code: normalizedCodeValue,
+              language: resolvedSubmitLanguage,
+              roastMode,
+            });
           }}
           size="lg"
           variant="primary"
         >
-          $ roast_my_code
+          {createRoastMutation.isPending ? "$ roasting..." : "$ roast_my_code"}
         </Button>
       </div>
+
+      {createRoastMutation.error ? (
+        <p className="font-body text-xs leading-5 text-critical">
+          {createRoastMutation.error.message}
+        </p>
+      ) : null}
     </section>
   );
 }
