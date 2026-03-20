@@ -1,19 +1,19 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { asc, desc, sql } from "drizzle-orm";
 import { type Database, db } from "@/db/client";
-import { submissionAnalyses, submissions } from "@/db/schema";
+import { roasts } from "@/db/schema";
 
 export type LeaderboardEntry = {
+  code: string;
   createdAt: Date;
+  id: string;
   language: string;
   lineCount: number;
-  publicId: string;
   rank: number;
-  scoreTenths: number;
-  sourceCode: string;
+  score: number;
 };
 
-export type HomepageStats = {
-  averageScoreTenths: number;
+export type LeaderboardStats = {
+  averageScore: number;
   codesRoasted: number;
 };
 
@@ -23,17 +23,15 @@ export async function getLeaderboardEntries(
 ): Promise<LeaderboardEntry[]> {
   const rows = await database
     .select({
-      createdAt: submissions.createdAt,
-      language: submissions.language,
-      lineCount: submissions.lineCount,
-      publicId: submissions.publicId,
-      scoreTenths: submissionAnalyses.scoreTenths,
-      sourceCode: submissions.sourceCode,
+      code: roasts.code,
+      createdAt: roasts.createdAt,
+      id: roasts.id,
+      language: roasts.language,
+      lineCount: roasts.lineCount,
+      score: roasts.score,
     })
-    .from(submissionAnalyses)
-    .innerJoin(submissions, eq(submissionAnalyses.submissionId, submissions.id))
-    .where(eq(submissions.status, "completed"))
-    .orderBy(asc(submissionAnalyses.scoreTenths), desc(submissions.createdAt))
+    .from(roasts)
+    .orderBy(asc(roasts.score), desc(roasts.createdAt))
     .limit(limit);
 
   return rows.map((row, index) => ({
@@ -42,20 +40,20 @@ export async function getLeaderboardEntries(
   }));
 }
 
-export async function getHomepageStats(
+export async function getLeaderboardStats(
   database: Database = db,
-): Promise<HomepageStats> {
+): Promise<LeaderboardStats> {
   const [row] = await database
     .select({
-      averageScoreTenths: sql<number>`coalesce(round(avg(${submissionAnalyses.scoreTenths})), 0)::int`,
+      averageScore: sql<number>`coalesce(avg(${roasts.score}), 0)`,
       codesRoasted: sql<number>`count(*)::int`,
     })
-    .from(submissionAnalyses)
-    .innerJoin(submissions, eq(submissionAnalyses.submissionId, submissions.id))
-    .where(eq(submissions.status, "completed"));
+    .from(roasts);
 
   return {
-    averageScoreTenths: Number(row?.averageScoreTenths ?? 0),
+    averageScore: Number(row?.averageScore ?? 0),
     codesRoasted: Number(row?.codesRoasted ?? 0),
   };
 }
+
+export const getHomepageStats = getLeaderboardStats;

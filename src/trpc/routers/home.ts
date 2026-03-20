@@ -6,7 +6,7 @@ export const homeRouter = createTRPCRouter({
     const stats = await getHomepageStats(ctx.db);
 
     return {
-      averageScore: stats.averageScoreTenths / 10,
+      averageScore: stats.averageScore,
       codesRoasted: stats.codesRoasted,
     };
   }),

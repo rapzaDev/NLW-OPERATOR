@@ -1,65 +1,37 @@
 import type { BundledLanguage } from "shiki";
 import { CodeBlock } from "@/components/ui";
+import { codeEditorLanguages } from "@/lib/code-languages";
+import { DEFAULT_ROAST_LANGUAGE } from "@/lib/roast";
+import { caller } from "@/trpc/server";
 
 type LeaderboardEntry = {
-  code: string[];
+  code: string;
   language: BundledLanguage;
+  id: string;
+  lineCount: number;
   rank: number;
   score: string;
-  scoreLabel: string;
 };
 
-const leaderboardEntries = [
-  {
-    code: [
-      'eval(prompt("enter code"))',
-      "document.write(response)",
-      "// trust the user lol",
-    ],
-    language: "javascript",
-    rank: 1,
-    score: "1.2",
-    scoreLabel: "score:",
-  },
-  {
-    code: [
-      "if (x == true) { return true; }",
-      "else if (x == false) { return false; }",
-      "else { return !false; }",
-    ],
-    language: "typescript",
-    rank: 2,
-    score: "1.8",
-    scoreLabel: "score",
-  },
-  {
-    code: ["SELECT * FROM users WHERE 1=1", "-- TODO: add authentication"],
-    language: "sql",
-    rank: 3,
-    score: "2.1",
-    scoreLabel: "score",
-  },
-  {
-    code: ["catch (e) {", "  // ignore", "}"],
-    language: "java",
-    rank: 4,
-    score: "2.3",
-    scoreLabel: "score",
-  },
-  {
-    code: [
-      "const sleep = (ms) =>",
-      "  new Date(Date.now() + ms)",
-      "  while(new Date() < end) {}",
-    ],
-    language: "javascript",
-    rank: 5,
-    score: "2.5",
-    scoreLabel: "score",
-  },
-] as const satisfies ReadonlyArray<LeaderboardEntry>;
+const supportedLanguageSet = new Set<string>(
+  codeEditorLanguages.map((language) => language.value),
+);
 
-function LeaderboardHero() {
+function getHighlightLanguage(language: string): BundledLanguage {
+  if (supportedLanguageSet.has(language)) {
+    return language as BundledLanguage;
+  }
+
+  return DEFAULT_ROAST_LANGUAGE as BundledLanguage;
+}
+
+function LeaderboardHero({
+  averageScore,
+  codesRoasted,
+}: {
+  averageScore: number;
+  codesRoasted: number;
+}) {
   return (
     <header className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -79,9 +51,9 @@ function LeaderboardHero() {
       </p>
 
       <div className="flex flex-wrap items-center gap-2 font-body text-xs leading-5 text-subtle">
-        <span>2,847 submissions</span>
+        <span>{codesRoasted} submissions</span>
         <span className="font-display">·</span>
-        <span>avg score: 4.2/10</span>
+        <span>avg score: {averageScore.toFixed(1)}/10</span>
       </div>
     </header>
   );
@@ -98,7 +70,7 @@ function LeaderboardEntryCard({ entry }: { entry: LeaderboardEntry }) {
           </div>
 
           <div className="flex items-center gap-1.5 font-display text-[12px] leading-none">
-            <span className="text-subtle">{entry.scoreLabel}</span>
+            <span className="text-subtle">score</span>
             <span className="text-[13px] font-bold text-critical">
               {entry.score}
             </span>
@@ -107,24 +79,46 @@ function LeaderboardEntryCard({ entry }: { entry: LeaderboardEntry }) {
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-display text-[12px] leading-none">
           <span className="text-muted">{entry.language}</span>
-          <span className="text-subtle">{entry.code.length} lines</span>
+          <span className="text-subtle">{entry.lineCount} lines</span>
         </div>
       </div>
-      <CodeBlock code={entry.code.join("\n")} lang={entry.language} />
+      <CodeBlock code={entry.code} lang={entry.language} />
     </article>
   );
 }
 
 export async function LeaderboardPageScreen() {
+  const [entries, stats] = await Promise.all([
+    caller.leaderboard.list(),
+    caller.leaderboard.stats(),
+  ]);
+  const leaderboardEntries: LeaderboardEntry[] = entries.map((entry) => ({
+    code: entry.code,
+    id: entry.id,
+    language: getHighlightLanguage(entry.language),
+    lineCount: entry.lineCount,
+    rank: entry.rank,
+    score: entry.score.toFixed(1),
+  }));
+
   return (
     <main aria-labelledby="leaderboard-title" className="bg-background">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 px-4 pb-16 pt-10 sm:px-8 sm:pb-20 lg:px-20">
-        <LeaderboardHero />
+        <LeaderboardHero
+          averageScore={stats.averageScore}
+          codesRoasted={stats.codesRoasted}
+        />
 
         <section className="flex flex-col gap-5">
-          {leaderboardEntries.map((entry) => (
-            <LeaderboardEntryCard entry={entry} key={entry.rank} />
-          ))}
+          {leaderboardEntries.length > 0 ? (
+            leaderboardEntries.map((entry) => (
+              <LeaderboardEntryCard entry={entry} key={entry.id} />
+            ))
+          ) : (
+            <div className="border border-stroke px-5 py-10 text-center font-body text-sm leading-6 text-subtle">
+              {"// no roasts yet - submit code to populate the leaderboard"}
+            </div>
+          )}
         </section>
       </div>
     </main>

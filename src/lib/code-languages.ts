@@ -1,4 +1,5 @@
 import type { BundledLanguage } from "shiki";
+import { DEFAULT_ROAST_LANGUAGE } from "./roast";
 
 export const codeEditorLanguages = [
   { label: "Angular HTML", value: "angular-html" },
@@ -64,3 +65,163 @@ export const codeEditorLanguages = [
 
 export type CodeEditorLanguage = (typeof codeEditorLanguages)[number]["value"];
 export type CodeEditorLanguageMode = CodeEditorLanguage | "auto";
+
+export type CodeLanguageDetector = {
+  highlightAuto: (
+    code: string,
+    languageSubset?: string[],
+  ) => {
+    language?: string;
+  };
+};
+
+const codeEditorLanguageValues = codeEditorLanguages.map(
+  ({ value }) => value,
+) as CodeEditorLanguage[];
+const codeEditorLanguageSet = new Set<string>(codeEditorLanguageValues);
+const minimumDetectedCodeLength = 6;
+const autoDetectLanguageCandidates = [
+  "python",
+  "javascript",
+  "typescript",
+  "jsx",
+  "tsx",
+  "java",
+  "c",
+  "cpp",
+  "php",
+  "ruby",
+  "bash",
+  "shell",
+  "sql",
+  "pgsql",
+  "xml",
+  "css",
+  "scss",
+  "sass",
+  "less",
+  "graphql",
+  "json",
+  "json5",
+  "yaml",
+  "markdown",
+  "handlebars",
+  "pug",
+] as const;
+const codeEditorLanguageAliases = {
+  "c++": "cpp",
+  bash: "shellscript",
+  cjs: "javascript",
+  coffeescript: "coffee",
+  cts: "typescript",
+  gql: "graphql",
+  hbs: "handlebars",
+  jade: "pug",
+  js: "javascript",
+  md: "markdown",
+  mjs: "javascript",
+  mts: "typescript",
+  py: "python",
+  pgsql: "sql",
+  regex: "regexp",
+  sh: "shellscript",
+  shell: "shellscript",
+  styl: "stylus",
+  ts: "typescript",
+  yml: "yaml",
+  zsh: "shellscript",
+} as const satisfies Partial<Record<string, CodeEditorLanguage>>;
+
+let codeLanguageDetectorPromise: Promise<CodeLanguageDetector> | null = null;
+
+function isCodeEditorLanguage(value: string): value is CodeEditorLanguage {
+  return codeEditorLanguageSet.has(value);
+}
+
+function hasMeaningfulCodeContent(code: string) {
+  const normalizedCode = code.trim();
+  const meaningfulLength = normalizedCode.replace(/\s+/g, "").length;
+
+  return (
+    normalizedCode.length > 0 && meaningfulLength >= minimumDetectedCodeLength
+  );
+}
+
+export function normalizeDetectedCodeLanguage(
+  code: string,
+  detectedLanguage: string | undefined,
+): CodeEditorLanguage | null {
+  if (!detectedLanguage) {
+    return null;
+  }
+
+  const normalizedLanguage: string =
+    codeEditorLanguageAliases[
+      detectedLanguage as keyof typeof codeEditorLanguageAliases
+    ] ?? detectedLanguage;
+
+  if (normalizedLanguage === "xml") {
+    const normalizedCode = code.toLowerCase();
+
+    if (
+      normalizedCode.includes("<!doctype html") ||
+      normalizedCode.includes("<html")
+    ) {
+      return "html";
+    }
+  }
+
+  return isCodeEditorLanguage(normalizedLanguage) ? normalizedLanguage : null;
+}
+
+export async function getCodeLanguageDetector() {
+  if (!codeLanguageDetectorPromise) {
+    codeLanguageDetectorPromise = import("highlight.js").then(
+      (highlightJsModule) => highlightJsModule.default,
+    );
+  }
+
+  return codeLanguageDetectorPromise;
+}
+
+export async function detectCodeLanguage(
+  code: string,
+  loadDetector: () => Promise<CodeLanguageDetector> = getCodeLanguageDetector,
+) {
+  if (!hasMeaningfulCodeContent(code)) {
+    return null;
+  }
+
+  try {
+    const languageDetector = await loadDetector();
+    const detectionResult = languageDetector.highlightAuto(
+      code,
+      autoDetectLanguageCandidates.slice(),
+    );
+
+    return normalizeDetectedCodeLanguage(code, detectionResult.language);
+  } catch {
+    return null;
+  }
+}
+
+export async function resolveRoastSubmitLanguage(
+  {
+    code,
+    languageMode,
+    resolvedLanguage,
+  }: {
+    code: string;
+    languageMode: CodeEditorLanguageMode;
+    resolvedLanguage: CodeEditorLanguage | null;
+  },
+  loadDetector: () => Promise<CodeLanguageDetector> = getCodeLanguageDetector,
+) {
+  if (languageMode !== "auto") {
+    return languageMode;
+  }
+
+  const detectedLanguage = await detectCodeLanguage(code, loadDetector);
+
+  return detectedLanguage ?? resolvedLanguage ?? DEFAULT_ROAST_LANGUAGE;
+}

@@ -22,6 +22,7 @@ import {
   type CodeEditorLanguage,
   type CodeEditorLanguageMode,
   codeEditorLanguages,
+  detectCodeLanguage,
 } from "@/lib/code-languages";
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -29,36 +30,9 @@ function joinClasses(...values: Array<string | false | null | undefined>) {
 }
 
 const codeEditorTheme = "vesper";
-const codeEditorLanguageValues = codeEditorLanguages.map(
-  ({ value }) => value,
-) as CodeEditorLanguage[];
-const codeEditorLanguageSet = new Set<string>(codeEditorLanguageValues);
 const codeEditorLanguageLabelByValue = Object.fromEntries(
   codeEditorLanguages.map(({ label, value }) => [value, label]),
 ) as Record<CodeEditorLanguage, string>;
-const minimumDetectedCodeLength = 6;
-const codeEditorLanguageAliases = {
-  "c++": "cpp",
-  bash: "shellscript",
-  cjs: "javascript",
-  coffeescript: "coffee",
-  cts: "typescript",
-  gql: "graphql",
-  hbs: "handlebars",
-  jade: "pug",
-  js: "javascript",
-  md: "markdown",
-  mjs: "javascript",
-  mts: "typescript",
-  py: "python",
-  regex: "regexp",
-  sh: "shellscript",
-  shell: "shellscript",
-  styl: "stylus",
-  ts: "typescript",
-  yml: "yaml",
-  zsh: "shellscript",
-} as const satisfies Partial<Record<string, CodeEditorLanguage>>;
 
 type CodeEditorHighlightToken = {
   color?: string;
@@ -86,10 +60,6 @@ type CodeEditorContextValue = {
 
 const CodeEditorContext = createContext<CodeEditorContextValue | null>(null);
 
-type CodeEditorLanguageDetector = Awaited<
-  typeof import("highlight.js")
->["default"];
-
 async function createCodeEditorHighlighter() {
   const { getSingletonHighlighter } = await import("shiki/bundle/web");
 
@@ -103,7 +73,6 @@ type CodeEditorHighlighter = Awaited<
 >;
 
 let highlighterPromise: Promise<CodeEditorHighlighter> | null = null;
-let languageDetectorPromise: Promise<CodeEditorLanguageDetector> | null = null;
 
 async function getCodeEditorHighlighter() {
   if (!highlighterPromise) {
@@ -111,47 +80,6 @@ async function getCodeEditorHighlighter() {
   }
 
   return highlighterPromise;
-}
-
-async function getCodeEditorLanguageDetector() {
-  if (!languageDetectorPromise) {
-    languageDetectorPromise = import("highlight.js").then(
-      (highlightJsModule) => highlightJsModule.default,
-    );
-  }
-
-  return languageDetectorPromise;
-}
-
-function isCodeEditorLanguage(value: string): value is CodeEditorLanguage {
-  return codeEditorLanguageSet.has(value);
-}
-
-function normalizeDetectedLanguage(
-  code: string,
-  detectedLanguage: string | undefined,
-): CodeEditorLanguage | null {
-  if (!detectedLanguage) {
-    return null;
-  }
-
-  const normalizedLanguage: string =
-    codeEditorLanguageAliases[
-      detectedLanguage as keyof typeof codeEditorLanguageAliases
-    ] ?? detectedLanguage;
-
-  if (normalizedLanguage === "xml") {
-    const normalizedCode = code.toLowerCase();
-
-    if (
-      normalizedCode.includes("<!doctype html") ||
-      normalizedCode.includes("<html")
-    ) {
-      return "html";
-    }
-  }
-
-  return isCodeEditorLanguage(normalizedLanguage) ? normalizedLanguage : null;
 }
 
 function useCodeEditorContext() {
@@ -208,32 +136,19 @@ export function CodeEditorRoot({
 
   useEffect(() => {
     let isCancelled = false;
-    const normalizedValue = deferredValue.trim();
-    const meaningfulLength = normalizedValue.replace(/\s+/g, "").length;
 
     if (currentLanguageMode !== "auto") {
       return;
     }
 
-    if (!normalizedValue || meaningfulLength < minimumDetectedCodeLength) {
-      startTransition(() => {
-        setDetectedLanguage(null);
-      });
-
-      return;
-    }
-
-    void getCodeEditorLanguageDetector()
-      .then((languageDetector) => languageDetector.highlightAuto(deferredValue))
-      .then((detectionResult) => {
+    void detectCodeLanguage(deferredValue)
+      .then((nextLanguage) => {
         if (isCancelled) {
           return;
         }
 
         startTransition(() => {
-          setDetectedLanguage(
-            normalizeDetectedLanguage(deferredValue, detectionResult.language),
-          );
+          setDetectedLanguage(nextLanguage);
         });
       })
       .catch(() => {

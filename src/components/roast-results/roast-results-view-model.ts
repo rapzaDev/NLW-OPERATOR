@@ -48,6 +48,12 @@ function formatLineCount(lineCount: number) {
   return `${lineCount} ${lineCount === 1 ? "line" : "lines"}`;
 }
 
+function getScoreRingDegrees(score: number) {
+  const clampedScore = Math.min(Math.max(score, 0), 10);
+
+  return clampedScore * 36;
+}
+
 export function createRoastResultsViewModel(roast: RoastDetails) {
   return {
     analysisItems: roast.analysisItems.map((item) => ({
@@ -58,6 +64,7 @@ export function createRoastResultsViewModel(roast: RoastDetails) {
     highlightLanguage: getHighlightLanguage(roast.language),
     lineCountLabel: formatLineCount(roast.lineCount),
     scoreLabel: roast.score.toFixed(1),
+    scoreRingDegrees: getScoreRingDegrees(roast.score),
     verdictTone: getVerdictTone(roast.verdict),
   };
 }
